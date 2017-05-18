@@ -1,0 +1,22 @@
+int main() {
+    int vectSize, querySize;
+    cin>>vectSize>>querySize;
+    vector<int[]> vect;
+    int arrSize[vectSize];
+    for(int i = 0; i < vectSize; i++){
+        cin>>arrSize[i];
+        int arrTemp[arrSize[i]];
+        for(int j = 0; j < arrSize[i]; j++){
+            cin>>arrTemp[j];
+        }
+        vect.push_back(arrTemp);
+    }
+    int queryList[querySize][2];
+    for(int i = 0; i < querySize; i++) {
+        cin>>queryList[i][0]>>queryList[i][1];
+    }
+    for(int i = 0; i < querySize; i++) {
+        cout<<vect[queryList[i][0]][queryList[i][1]];
+    }
+    return 0;
+}
