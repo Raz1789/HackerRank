@@ -1,22 +1,125 @@
+#include <cmath>
+#include <cstdio>
+#include <vector>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+void decoder(string, vector<string>);
 int main() {
-    int vectSize, querySize;
-    cin>>vectSize>>querySize;
-    vector<int[]> vect;
-    int arrSize[vectSize];
-    for(int i = 0; i < vectSize; i++){
-        cin>>arrSize[i];
-        int arrTemp[arrSize[i]];
-        for(int j = 0; j < arrSize[i]; j++){
-            cin>>arrTemp[j];
+    int n,q;
+    cin>>n>>q; //geting the number of hrmls and queries.
+    
+    //declaring variables
+    vector<string> hrml,query;
+    string temp,input;
+    
+    //some problem with the input
+    getline(cin,input);
+    
+    //getting the hrmls
+    for(int i = 0; i < n; i++) {
+        getline(cin,input);
+        for(int i=0; i < input.length(); i++){
+            if(isalnum(input[i]) || input[i]=='/' || input[i]=='<'){
+                temp+=input[i];
+            }
+            else {
+                if(!temp.empty())
+                    hrml.push_back(temp);
+                temp.clear();
+            }        
         }
-        vect.push_back(arrTemp);
+    if(!temp.empty())
+        hrml.push_back(temp);
     }
-    int queryList[querySize][2];
-    for(int i = 0; i < querySize; i++) {
-        cin>>queryList[i][0]>>queryList[i][1];
+    
+    //getting the queries
+    for(int i = 0; i < q; i++) {
+        getline(cin,temp);
+        query.push_back(temp);
     }
-    for(int i = 0; i < querySize; i++) {
-        cout<<vect[queryList[i][0]][queryList[i][1]];
+
+    //sending the query and hrml to function
+    for(int i = 0; i < q; i++) {
+        decoder(query[i],hrml);
     }
     return 0;
+}
+
+void decoder(string query, vector<string> hrml) {
+    vector<string> queryBreakup;
+    string temp;
+    bool checkquery = true;
+    bool secondtagcheck = false;
+    int querycounter;
+    int pos=0;
+    //getting individual parts of the query
+    for(int i=0; i < query.length(); i++){
+        if(isalnum(query[i])){
+            temp+=query[i];
+        }
+        else {
+            queryBreakup.push_back(temp);
+            temp.clear();
+            if(query[i] =='~'){
+                temp+='~';
+            }
+        }        
+    }
+    queryBreakup.push_back(temp); //getting the last string
+    
+    
+    //working on the query
+    for(int i = 0; i < queryBreakup.size(); i++){ //checking query one by one
+        if(i != queryBreakup.size()-1 && checkquery) { // boundary check for query
+            if(queryBreakup[i+1][0] != '~' && checkquery){ //checking if next tag or value
+                secondtagcheck = false;
+                for(int j = pos; j < hrml.size() && !secondtagcheck && checkquery; j++){ 
+                    if(hrml[j][0] == '<' && hrml[j] == '<'+queryBreakup[i] && checkquery){ // checking the code start
+                        for(int k = j+1; k < hrml.size(); k++){ // checking the tag2 before end of tag1
+                            if(hrml[k] == "</"+queryBreakup[i] && checkquery && !secondtagcheck){
+                                checkquery = false;
+                                break;
+                            }
+                            if(hrml[k] == '<' + queryBreakup[i+1] && !secondtagcheck && checkquery){
+                                pos=k;
+                                secondtagcheck = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        checkquery = false;
+                    }
+                }  
+            } else {
+                secondtagcheck = false;
+                for(int j = pos; j < hrml.size() && !secondtagcheck && checkquery; j++){ 
+                    if(hrml[j] == '<'+queryBreakup[i] && checkquery){ // checking the code start
+                        for(int k = j+1; k < hrml.size(); k++){ // checking the tag2 before end of tag1
+                            if((hrml[k] == "</"+queryBreakup[i] || hrml[k][0] =='<') && checkquery && !secondtagcheck){
+                                checkquery = false;
+                                break;
+                            }
+                            if(queryBreakup[i+1] == '~'+hrml[k] && !secondtagcheck && checkquery){
+                                pos=k;
+                                secondtagcheck = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        checkquery = false;
+                    }
+                }
+            }
+        }
+    }
+    
+    if(!checkquery){
+        cout<<"Not Found!"<<endl;
+    } else {
+        cout<<hrml[pos+1]<<endl;
+    }
 }
